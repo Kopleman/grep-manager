@@ -1,8 +1,8 @@
-import * as Koa from "koa";
+import * as Koa from 'koa';
 
-import { config } from "./config";
-import { logger } from "./logging";
-import { routes } from "./routes";
+import { config } from './config';
+import { logger } from './logging';
+import { routes } from './routes';
 
 const app = new Koa();
 
