@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "dependencies": {
     "bluebird": "^3.5.1",
+    "crypto": "^1.0.1",
     "hiredis": "^0.5.0",
     "koa": "^2.5.1",
     "koa-router": "^7.4.0",
@@ -13,6 +14,7 @@
     "@types/koa": "^2.0.45",
     "@types/koa-router": "^7.0.28",
     "@types/redis": "^2.8.6",
+    "codelyzer": "^4.3.0",
     "cross-env": "^5.1.5",
     "nodemon": "^1.17.4",
     "ts-node": "^6.0.3",
@@ -23,5 +25,10 @@
   "scripts": {
     "build-server": "tslint --project . && tsc",
     "watch-server": "cross-env NODE_ENV=development nodemon --watch 'src/**/*' -e ts,tsx --exec 'ts-node' src/server/server.ts"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "useTabs": true,
+    "printWidth": 100
   }
 }
