@@ -1,5 +1,6 @@
 import * as Redis from 'redis';
 import { redisClient } from '../server/db';
+import { config } from '../server/config';
 import * as crypto from 'crypto';
 import * as moment from 'moment';
 import * as execa from 'execa';
@@ -25,27 +26,27 @@ export class Task implements ITask {
 	
 	public static genCmd(domain: string, query?: ITimeQuery) {
 		const year = query.year
-			? moment()
-				.year(parseInt(query.year, 10))
-				.format('YYYY')
-			: moment()
+			? parseInt(query.year, 10)
+			: parseInt(moment()
 				.year()
-				.toString();
-		const month = query.month
-			? moment()
-				.month(parseInt(query.month, 10))
-				.format('MM')
-			: moment()
+				.toString());
+		/**
+		 * Это простоя мякотка в momemntJS месяцы идут 0 до 11, и если month() скормить результат 
+		 * month() получим +1 :D
+		 */
+		const month  = query.month
+			? parseInt( query.month, 10) - 1
+			: parseInt(moment()
 				.month()
-				.toString();
+				.toString()) - 1;
 		let date = moment()
-			.year(parseInt(year))
-			.month(parseInt(month))
+			.year(year)
+			.month(month)
 			.format('YYYYMM');
 
 		return `zgrep --no-filename ${
 			domain
-			} /logbackup/ul?.ukit.com/nginx/nginx.log-${date}* | gzip > ${domain}.txt.gz`;
+			} ${config.logsRoot}ul?.ukit.com/nginx/nginx.log-${date}* | gzip > ${config.folderForSave}${domain}-${date}.txt.gz`;
 	}
 	
 	public static create(taskData: { [key: string]: any }) {
@@ -150,18 +151,14 @@ export class Task implements ITask {
 		if (TASK_STACK[this.hash]) {
 			throw new Error('Task already existed');
 		}
-
-		let promise = new Promise(resolve => {
-			setTimeout(() => {
-				console.log('yarr');
-				resolve();
-			}, 10000);
-		});
-
+		console.log(this.cmd);
+		let promise = execa.shell(this.cmd);	
+		
 		TASK_STACK[this.hash] = promise;
 		
 		try {
 			let res = await promise;
+			console.log(res);
 			this.status = 'completed';
 			TASK_STACK[this.hash] = null;
 			await this.save();
