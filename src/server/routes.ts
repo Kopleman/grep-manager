@@ -5,8 +5,6 @@ import { Task, TASK_STACK } from '../models/task';
 const router = new Router();
 
 router.get('/', async ctx => {
-	const abc = Task.create({domain: 'abc'});
-	await abc.save();
 	ctx.body = 'Hello World!';
 });
 
@@ -32,7 +30,6 @@ router.post('/task', async ctx => {
 	try {
 		const task = await modelTask.findByDomainAndQuery(domain, query);
 		if (task) {
-			console.log(task.getHash());
 			if( task.status === 'completed') {
 				ctx.response.status = 409;
 				ctx.response.body = { message: 'Task already completed' };			
