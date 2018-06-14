@@ -5,7 +5,21 @@ import { Task, TASK_STACK } from '../models/task';
 const router = new Router();
 
 router.get('/', async ctx => {
+	const modelTask = new Task(redisClient);
+	await modelTask.getAll();
 	ctx.body = 'Hello World!';
+});
+
+router.get('/task', async ctx => {
+	const modelTask = new Task(redisClient);
+	const tasks = await modelTask.getAll();
+	tasks.forEach((t) => {
+		delete t['client'];
+		delete t['isCreate'];
+	});
+	console.log(tasks);
+	ctx.response.status = 200;
+	ctx.response.body = tasks;
 });
 
 router.post('/task', async ctx => {
@@ -53,7 +67,6 @@ router.post('/task', async ctx => {
 				query: body,
 				domain
 			});
-			console.log(task.getHash());
 			await task.save();
 			ctx.response.status = 200;
 			ctx.response.body = { id: task.hash };

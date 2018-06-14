@@ -8,6 +8,9 @@ declare module 'redis' {
 		hmgetAsync<T>(...args: any[]): Promise<T>;
 		setAsync(key: string, value: string): Promise<void>;
 		getAsync(key: string): Promise<string>;
+		keysAsync(pattern: string): Promise<string[]>;
+		scanAsync(cursor: number, options: string[]): Promise<[string, string[]]>;
+		sscanAsync(key: string, cursor: string, options?: string[]): Promise<[string, string[]]>;
 	}
 
 	export interface Multi extends Redis.Commands<Multi> {

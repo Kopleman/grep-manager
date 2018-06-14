@@ -232,6 +232,23 @@ export class Task implements ITask {
 		}
 	}
 	
+	public async getAll() {
+		const asyncForEach = async function(array: any[], callback: Function) {
+			for (let index = 0; index < array.length; index++) {
+				await callback(array[index], index, array)
+			}
+		};
+		
+		let keys = await this.client.sscanAsync(Task.setKey(), '0');
+		let tasks: Task[] = [];
+		await asyncForEach(keys[1], async (k: string) => {
+			let task = await this.findByHash(k);
+			tasks.push(task);
+		});
+		
+		return tasks;
+	}
+	
 	/**
 	 * Возвращает имя ключа для Hashes
 	 */
