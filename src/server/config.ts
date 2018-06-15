@@ -4,8 +4,8 @@ export interface IConfig {
 	db: {
 		port: number;
 	};
-	logsRoot: string,
-	folderForSave: string
+	logsRoot: string;
+	folderForSave: string;
 }
 
 const config: IConfig = {

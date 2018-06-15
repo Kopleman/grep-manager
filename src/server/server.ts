@@ -7,12 +7,10 @@ import { Task } from '../models/task';
 
 const app = new Koa();
 
-
 app.use(logger);
 app.use(bodyParser());
 app.use(Task.onInit);
 app.use(routes);
-
 
 app.listen(config.port);
 

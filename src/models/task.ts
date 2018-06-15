@@ -26,32 +26,37 @@ export interface ITask {
 }
 
 export class Task implements ITask {
-	
 	public static genCmd(domain: string, query?: ITimeQuery) {
 		const year = query.year
 			? parseInt(query.year, 10)
-			: parseInt(moment()
-				.year()
-				.toString());
+			: parseInt(
+					moment()
+						.year()
+						.toString()
+			  );
 		/**
-		 * Это простоя мякотка в momemntJS месяцы идут 0 до 11, и если month() скормить результат 
+		 * Это простоя мякотка в momemntJS месяцы идут 0 до 11, и если month() скормить результат
 		 * month() получим +1 :D
 		 */
-		const month  = query.month
-			? parseInt( query.month, 10) - 1
-			: parseInt(moment()
-				.month()
-				.toString()) - 1;
+		const month = query.month
+			? parseInt(query.month, 10) - 1
+			: parseInt(
+					moment()
+						.month()
+						.toString()
+			  ) - 1;
 		let date = moment()
 			.year(year)
 			.month(month)
 			.format('YYYYMM');
 
-		return `zgrep --no-filename ${
-			domain
-			} ${config.logsRoot}ul?.ukit.com/nginx/nginx.log-${date}* | gzip > ${config.folderForSave}${domain}-${date}.txt.gz`;
+		return `zgrep --no-filename ${domain} ${
+			config.logsRoot
+		}ul?.ukit.com/nginx/nginx.log-${date}* | gzip > ${
+			config.folderForSave
+		}${domain}-${date}.txt.gz`;
 	}
-	
+
 	public static create(taskData: { [key: string]: any }) {
 		if (!taskData.domain) {
 			throw new Error('Domain name is required');
@@ -66,9 +71,9 @@ export class Task implements ITask {
 		task.isCreate = true;
 		return task;
 	}
-	
+
 	public static async onInit(ctx: Koa.Context, next: () => Promise<any>) {
-		if( !JUST_STARTED ) {
+		if (!JUST_STARTED) {
 			await next();
 			return;
 		}
@@ -77,7 +82,7 @@ export class Task implements ITask {
 		try {
 			const tasks = await modelTask.getAll();
 			await asyncForEach(tasks, async (task: Task) => {
-				if( task.status === 'inProgress') {
+				if (task.status === 'inProgress') {
 					task.status = 'failed';
 					await task.save();
 				}
@@ -86,8 +91,8 @@ export class Task implements ITask {
 		} catch (err) {
 			throw err;
 		}
-	} 
-	
+	}
+
 	private static readonly _PREFIX_ = 'tasks:';
 	/**
 	 * Возвращает имя ключа для Set
@@ -138,7 +143,7 @@ export class Task implements ITask {
 		fields.forEach((fieldName, index) => {
 			ret[fieldName] = data[index];
 		});
-		
+
 		if (!ret.query) {
 			ret.query = {};
 		} else {
@@ -169,33 +174,30 @@ export class Task implements ITask {
 	}
 
 	public async exec() {
-		
 		if (TASK_STACK[this.hash]) {
 			throw new Error('Task already existed');
 		}
 
-		let promise = execa.shell(this.cmd);	
-		
+		let promise = execa.shell(this.cmd);
+
 		TASK_STACK[this.hash] = promise;
-		
+
 		try {
 			let res = await promise;
 			this.status = 'completed';
 			TASK_STACK[this.hash] = null;
 			await this.save();
-			
 		} catch (err) {
 			console.log(err);
 			this.status = 'failed';
 			TASK_STACK[this.hash] = null;
 			await this.save();
-			
 		}
 	}
 
-	public getHash(domain?:string, query?: ITimeQuery) {
+	public getHash(domain?: string, query?: ITimeQuery) {
 		let strToHash = domain ? Task.genCmd(domain, query) : Task.genCmd(this.domain, this.query);
-		
+
 		return crypto
 			.createHash('md5')
 			.update(strToHash)
@@ -251,19 +253,18 @@ export class Task implements ITask {
 			throw error;
 		}
 	}
-	
+
 	public async getAll() {
-		
 		let keys = await this.client.sscanAsync(Task.setKey(), '0');
 		let tasks: Task[] = [];
 		await asyncForEach(keys[1], async (k: string) => {
 			let task = await this.findByHash(k);
 			tasks.push(task);
 		});
-		
+
 		return tasks;
 	}
-	
+
 	/**
 	 * Возвращает имя ключа для Hashes
 	 */
@@ -272,7 +273,6 @@ export class Task implements ITask {
 	}
 
 	private _save() {
-		
 		let dataObj = {
 			domain: this.domain,
 			time: this.time,
@@ -281,13 +281,10 @@ export class Task implements ITask {
 			query: JSON.stringify(this.query),
 			status: this.status
 		};
-		
-		let dataArray =  _.flatten(Object.entries(dataObj));
+
+		let dataArray = _.flatten(Object.entries(dataObj));
 		return this.client
-			.multi([
-				['hmset', this.hashesKey(), ...dataArray],
-				['sadd', Task.setKey(), this.hash]
-			])
+			.multi([['hmset', this.hashesKey(), ...dataArray], ['sadd', Task.setKey(), this.hash]])
 			.execAsync();
 	}
 }
