@@ -9,7 +9,7 @@ import * as _ from 'lodash';
 import { asyncForEach } from '../utils';
 
 export const TASK_STACK: any = {};
-export var JUST_STARTED: boolean = true;
+export let JUST_STARTED: boolean = true;
 
 export interface ITimeQuery {
 	year?: string;
@@ -32,7 +32,8 @@ export class Task implements ITask {
 			: parseInt(
 					moment()
 						.year()
-						.toString()
+						.toString(),
+					10
 			  );
 		/**
 		 * Это простоя мякотка в momemntJS месяцы идут 0 до 11, и если month() скормить результат
@@ -43,9 +44,10 @@ export class Task implements ITask {
 			: parseInt(
 					moment()
 						.month()
-						.toString()
+						.toString(),
+					10
 			  ) - 1;
-		let date = moment()
+		const date = moment()
 			.year(year)
 			.month(month)
 			.format('YYYYMM');
@@ -139,7 +141,7 @@ export class Task implements ITask {
 
 	private static parseDataFromBd(data: string[]) {
 		const fields = Task.fields();
-		let ret: { [key: string]: any } = {};
+		const ret: { [key: string]: any } = {};
 		fields.forEach((fieldName, index) => {
 			ret[fieldName] = data[index];
 		});
@@ -178,12 +180,12 @@ export class Task implements ITask {
 			throw new Error('Task already existed');
 		}
 
-		let promise = execa.shell(this.cmd);
+		const promise = execa.shell(this.cmd);
 
 		TASK_STACK[this.hash] = promise;
 
 		try {
-			let res = await promise;
+			await promise;
 			this.status = 'completed';
 			TASK_STACK[this.hash] = null;
 			await this.save();
@@ -196,7 +198,7 @@ export class Task implements ITask {
 	}
 
 	public getHash(domain?: string, query?: ITimeQuery) {
-		let strToHash = domain ? Task.genCmd(domain, query) : Task.genCmd(this.domain, this.query);
+		const strToHash = domain ? Task.genCmd(domain, query) : Task.genCmd(this.domain, this.query);
 
 		return crypto
 			.createHash('md5')
@@ -221,7 +223,7 @@ export class Task implements ITask {
 	public async findByDomainAndQuery(domain: string, query: ITimeQuery) {
 		const q = [this.hashesKey(domain, query), ...Task.fields()];
 		try {
-			let dataFromDb = await this.client.hmgetAsync<string[]>(q);
+			const dataFromDb = await this.client.hmgetAsync<string[]>(q);
 
 			const data = Task.parseDataFromBd(dataFromDb);
 
@@ -239,7 +241,7 @@ export class Task implements ITask {
 	public async findByHash(id: string) {
 		const q = [`${Task._PREFIX_}${id}:`, ...Task.fields()];
 		try {
-			let dataFromDb = await this.client.hmgetAsync<string[]>(q);
+			const dataFromDb = await this.client.hmgetAsync<string[]>(q);
 
 			const data = Task.parseDataFromBd(dataFromDb);
 
@@ -255,10 +257,10 @@ export class Task implements ITask {
 	}
 
 	public async getAll() {
-		let keys = await this.client.sscanAsync(Task.setKey(), '0');
-		let tasks: Task[] = [];
+		const keys = await this.client.sscanAsync(Task.setKey(), '0');
+		const tasks: Task[] = [];
 		await asyncForEach(keys[1], async (k: string) => {
-			let task = await this.findByHash(k);
+			const task = await this.findByHash(k);
 			tasks.push(task);
 		});
 
@@ -273,7 +275,7 @@ export class Task implements ITask {
 	}
 
 	private _save() {
-		let dataObj = {
+		const dataObj = {
 			domain: this.domain,
 			time: this.time,
 			filePath: this.filePath,
@@ -282,7 +284,7 @@ export class Task implements ITask {
 			status: this.status
 		};
 
-		let dataArray = _.flatten(Object.entries(dataObj));
+		const dataArray = _.flatten(Object.entries(dataObj));
 		return this.client
 			.multi([['hmset', this.hashesKey(), ...dataArray], ['sadd', Task.setKey(), this.hash]])
 			.execAsync();

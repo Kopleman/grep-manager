@@ -62,14 +62,14 @@ router.post('/task', async ctx => {
 				task.exec();
 			}
 		} else {
-			const task = Task.create({
+			const newTask = Task.create({
 				query: body,
 				domain
 			});
-			await task.save();
+			await newTask.save();
 			ctx.response.status = 200;
-			ctx.response.body = { id: task.hash };
-			task.exec();
+			ctx.response.body = { id: newTask.hash };
+			newTask.exec();
 		}
 	} catch (err) {
 		console.log(err);
