@@ -1,3 +1,4 @@
+import * as Koa from 'koa';
 import * as Redis from 'redis';
 import { redisClient } from '../server/db';
 import { config } from '../server/config';
@@ -5,8 +6,10 @@ import * as crypto from 'crypto';
 import * as moment from 'moment';
 import * as execa from 'execa';
 import * as _ from 'lodash';
+import { asyncForEach } from '../utils';
 
 export const TASK_STACK: any = {};
+export var JUST_STARTED: boolean = true;
 
 export interface ITimeQuery {
 	year?: string;
@@ -63,6 +66,27 @@ export class Task implements ITask {
 		task.isCreate = true;
 		return task;
 	}
+	
+	public static async onInit(ctx: Koa.Context, next: () => Promise<any>) {
+		if( !JUST_STARTED ) {
+			await next();
+			return;
+		}
+		JUST_STARTED = false;
+		const modelTask = new Task(redisClient);
+		try {
+			const tasks = await modelTask.getAll();
+			await asyncForEach(tasks, async (task: Task) => {
+				if( task.status === 'inProgress') {
+					task.status = 'failed';
+					await task.save();
+				}
+			});
+			await next();
+		} catch (err) {
+			throw err;
+		}
+	} 
 	
 	private static readonly _PREFIX_ = 'tasks:';
 	/**
@@ -123,7 +147,6 @@ export class Task implements ITask {
 		if (!ret.domain) {
 			return null;
 		}
-		console.log(ret);
 		if (Object.keys(ret).length === fields.length) {
 			return ret;
 		}
@@ -146,19 +169,17 @@ export class Task implements ITask {
 	}
 
 	public async exec() {
-		//let promise = execa.shell(this.cmd);
-
+		
 		if (TASK_STACK[this.hash]) {
 			throw new Error('Task already existed');
 		}
-		console.log(this.cmd);
+
 		let promise = execa.shell(this.cmd);	
 		
 		TASK_STACK[this.hash] = promise;
 		
 		try {
 			let res = await promise;
-			console.log(res);
 			this.status = 'completed';
 			TASK_STACK[this.hash] = null;
 			await this.save();
@@ -196,7 +217,6 @@ export class Task implements ITask {
 	}
 
 	public async findByDomainAndQuery(domain: string, query: ITimeQuery) {
-		console.log(query);
 		const q = [this.hashesKey(domain, query), ...Task.fields()];
 		try {
 			let dataFromDb = await this.client.hmgetAsync<string[]>(q);
@@ -233,11 +253,6 @@ export class Task implements ITask {
 	}
 	
 	public async getAll() {
-		const asyncForEach = async function(array: any[], callback: Function) {
-			for (let index = 0; index < array.length; index++) {
-				await callback(array[index], index, array)
-			}
-		};
 		
 		let keys = await this.client.sscanAsync(Task.setKey(), '0');
 		let tasks: Task[] = [];

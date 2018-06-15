@@ -82,7 +82,6 @@ router.post('/task', async ctx => {
 router.delete('/task/:id', async ctx => {
 	const modelTask = new Task(redisClient);
 	const id = ctx.params.id;
-	console.log(ctx);
 	if( !id ) {
 		ctx.response.body = { message: 'Id is not defined' };
 		ctx.response.status = 404;
