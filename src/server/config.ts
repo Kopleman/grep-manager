@@ -6,6 +6,7 @@ export interface IConfig {
 	};
 	logsRoot: string;
 	folderForSave: string;
+	lookUpServers: string[];
 }
 
 const config: IConfig = {
@@ -15,7 +16,8 @@ const config: IConfig = {
 		port: 6370
 	},
 	logsRoot: 'log/',
-	folderForSave: ''
+	folderForSave: '',
+	lookUpServers: ['ul1', 'ul2']
 };
 
 export { config };

@@ -12,8 +12,8 @@ export const TASK_STACK: any = {};
 export let JUST_STARTED: boolean = true;
 
 export interface ITimeQuery {
-	year?: string;
-	month?: string;
+	from: string;
+	to: string;
 }
 
 export interface ITask {
@@ -27,36 +27,28 @@ export interface ITask {
 
 export class Task implements ITask {
 	public static genCmd(domain: string, query?: ITimeQuery) {
-		const year = query.year
-			? parseInt(query.year, 10)
-			: parseInt(
-					moment()
-						.year()
-						.toString(),
-					10
-			  );
-		/**
-		 * Это простоя мякотка в momemntJS месяцы идут 0 до 11, и если month() скормить результат
-		 * month() получим +1 :D
-		 */
-		const month = query.month
-			? parseInt(query.month, 10) - 1
-			: parseInt(
-					moment()
-						.month()
-						.toString(),
-					10
-			  ) - 1;
-		const date = moment()
-			.year(year)
-			.month(month)
-			.format('YYYYMM');
-
-		return `zgrep --no-filename ${domain} ${
-			config.logsRoot
-		}ul?.ukit.com/nginx/nginx.log-${date}* | gzip > ${
+		
+		if (!query) {
+			query = {
+				from: moment().format('DD/MM/YYYY'),
+				to: moment().format('DD/MM/YYYY')
+			};
+		}
+		
+		const from = moment(query.from, 'DD/MM/YYYY');
+		const to = moment(query.to, 'DD/MM/YYYY');
+		let whereStr = '';
+		for (const m = moment(from); m.diff(to, 'days') <= 0; m.add(1, 'days')) {
+			config.lookUpServers.forEach(serverName => {
+				whereStr += `${config.logsRoot}${serverName}.ukit.com/nginx/nginx.log-${m.format(
+					'YYYYMMDD'
+				)}.gz `;
+			});
+		}
+		
+		return `zgrep --no-filename ${domain} ${whereStr} | gzip > ${
 			config.folderForSave
-		}${domain}-${date}.txt.gz`;
+		}${domain}-${from.format('YYYYMMDD')}-${to.format('YYYYMMDD')}.txt.gz`;
 	}
 
 	public static create(taskData: { [key: string]: any }) {
@@ -165,7 +157,7 @@ export class Task implements ITask {
 	public time: number;
 	public filePath: string;
 	public cmd: string;
-	public query: { [key: string]: string };
+	public query: { from: string; to: string };
 	public status: 'inProgress' | 'completed' | 'failed';
 	private isCreate: boolean = false;
 

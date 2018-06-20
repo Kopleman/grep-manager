@@ -5,8 +5,11 @@ import { Task, TASK_STACK } from '../models/task';
 const router = new Router();
 
 router.get('/', async ctx => {
-	const modelTask = new Task(redisClient);
-	await modelTask.getAll();
+	const cmd = Task.genCmd('test.web-dengi.net', {
+		from: '01/06/2018',
+		to: '05/06/2018'
+	});
+	console.log(cmd);
 	ctx.body = 'Hello World!';
 });
 
@@ -28,8 +31,8 @@ router.post('/task', async ctx => {
 	const domain = body.domain;
 
 	const query = {
-		year: body.year,
-		month: body.month
+		from: body.from,
+		to: body.to
 	};
 
 	if (!domain) {
