@@ -20,6 +20,7 @@ export interface ITask {
 	domain: string;
 	time: number;
 	filePath: string;
+	fileName: string;
 	cmd: string;
 	query?: ITimeQuery;
 	status: 'inProgress' | 'completed' | 'failed';
@@ -27,28 +28,28 @@ export interface ITask {
 
 export class Task implements ITask {
 	public static genCmd(domain: string, query?: ITimeQuery) {
-		
 		if (!query) {
 			query = {
 				from: moment().format('DD/MM/YYYY'),
 				to: moment().format('DD/MM/YYYY')
 			};
 		}
-		
 		const from = moment(query.from, 'DD/MM/YYYY');
 		const to = moment(query.to, 'DD/MM/YYYY');
+		const fileName = `${domain}-${from.format('YYYYMMDD')}-${to.format('YYYYMMDD')}.txt.gz`;
+		const filePath = `${config.folderForSave}/${fileName}`;
 		let whereStr = '';
 		for (const m = moment(from); m.diff(to, 'days') <= 0; m.add(1, 'days')) {
 			config.lookUpServers.forEach(serverName => {
-				whereStr += `${config.logsRoot}/${serverName}/nginx/nginx.log-${m.format(
-					'YYYYMMDD'
-				)}.gz `;
+				whereStr += `${config.logsRoot}/${serverName}/nginx/nginx.log-${m.format('YYYYMMDD')}.gz `;
 			});
 		}
-		
-		return `zgrep --no-filename ${domain} ${whereStr} | gzip > ${
-			config.folderForSave
-		}/${domain}-${from.format('YYYYMMDD')}-${to.format('YYYYMMDD')}.txt.gz`;
+		const cmd = `zgrep --no-filename ${domain} ${whereStr} | gzip > ${filePath}`;
+		return {
+			cmd,
+			fileName,
+			filePath
+		};
 	}
 
 	public static create(taskData: { [key: string]: any }) {
@@ -58,9 +59,17 @@ export class Task implements ITask {
 		const task = new Task(redisClient);
 		task.time = taskData.time ? taskData.time : new Date().getTime();
 		task.domain = taskData.domain;
-		task.filePath = `${task.domain}.txt.gz`;
 		task.query = taskData.query;
-		task.cmd = Task.genCmd(task.domain, task.query);
+		if(!taskData.cmd) {
+			const cmdData = Task.genCmd(task.domain, task.query);
+			task.fileName = cmdData.fileName;
+			task.filePath = cmdData.filePath;
+			task.cmd = cmdData.cmd;
+		} else {
+			task.fileName = taskData.fileName;
+			task.filePath = taskData.filePath;
+			task.cmd = taskData.cmd;
+		}
 		task.status = taskData.status ? taskData.status : 'inProgress';
 		task.isCreate = true;
 		return task;
@@ -156,6 +165,7 @@ export class Task implements ITask {
 	public domain: string;
 	public time: number;
 	public filePath: string;
+	public fileName: string;
 	public cmd: string;
 	public query: { from: string; to: string };
 	public status: 'inProgress' | 'completed' | 'failed';
@@ -190,7 +200,9 @@ export class Task implements ITask {
 	}
 
 	public getHash(domain?: string, query?: ITimeQuery) {
-		const strToHash = domain ? Task.genCmd(domain, query) : Task.genCmd(this.domain, this.query);
+		const strToHash = domain
+			? Task.genCmd(domain, query).cmd
+			: Task.genCmd(this.domain, this.query).cmd;
 
 		return crypto
 			.createHash('md5')
