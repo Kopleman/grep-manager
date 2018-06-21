@@ -1,0 +1,33 @@
+version: '2'
+services:
+  grep-manager:
+    container_name: grep-manager
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - "/logbackup:/logbackup"
+      - "./storage:/storage"
+    restart: always
+    environment:
+      - NODE_ENV=production
+    network_mode: host
+    mem_limit: 500m
+    depends_on:
+      - redis
+  redis:
+    image: redis
+    restart: always
+    container_name: grep-manager-redis
+    network_mode: host
+  nginx:
+    image: nginx
+    restart: always
+    container_name: grep-manager-nginx
+    network_mode: host
+    volumes:
+      - "./storage:/storage"
+      - "./nginx.conf:/etc/nginx/nginx.conf"
+      - "./htpasswd:/etc/nginx/htpasswd"
+
+

@@ -10,14 +10,14 @@ export interface IConfig {
 }
 
 const config: IConfig = {
-	port: process.env.NODE_PORT || '6369',
+	port: process.env.NODE_PORT || '8088',
 	prettyLog: process.env.NODE_ENV === 'development',
 	db: {
-		port: 6370
+		port: 6379
 	},
-	logsRoot: 'log/',
-	folderForSave: '',
-	lookUpServers: ['ul1', 'ul2']
+	logsRoot: '/logbackup',
+	folderForSave: '/storage',
+	lookUpServers: ['ul1.ukit.com', 'ul2.ukit.com']
 };
 
 export { config };

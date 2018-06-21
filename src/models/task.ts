@@ -40,7 +40,7 @@ export class Task implements ITask {
 		let whereStr = '';
 		for (const m = moment(from); m.diff(to, 'days') <= 0; m.add(1, 'days')) {
 			config.lookUpServers.forEach(serverName => {
-				whereStr += `${config.logsRoot}${serverName}.ukit.com/nginx/nginx.log-${m.format(
+				whereStr += `${config.logsRoot}/${serverName}/nginx/nginx.log-${m.format(
 					'YYYYMMDD'
 				)}.gz `;
 			});
@@ -48,7 +48,7 @@ export class Task implements ITask {
 		
 		return `zgrep --no-filename ${domain} ${whereStr} | gzip > ${
 			config.folderForSave
-		}${domain}-${from.format('YYYYMMDD')}-${to.format('YYYYMMDD')}.txt.gz`;
+		}/${domain}-${from.format('YYYYMMDD')}-${to.format('YYYYMMDD')}.txt.gz`;
 	}
 
 	public static create(taskData: { [key: string]: any }) {
