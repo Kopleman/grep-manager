@@ -17,9 +17,8 @@ router.get('/', async ctx => {
 router.get('/task', async ctx => {
 	const modelTask = new Task(redisClient);
 	const tasks = await modelTask.getAll();
-	console.log(tasks);
-	const _tasks: {[index:string]: Task} = {};
-	if( tasks && tasks.length) {
+	const _tasks: { [index: string]: Task } = {};
+	if (tasks && tasks.length) {
 		tasks.forEach(t => {
 			delete t['client'];
 			delete t['isCreate'];
@@ -99,7 +98,6 @@ router.delete('/task/:id', async ctx => {
 		const task = await modelTask.findByHash(id);
 		if (task) {
 			await task.remove();
-			console.log('removed');
 			ctx.response.status = 200;
 			ctx.response.body = { message: 'ok' };
 		} else {

@@ -61,7 +61,7 @@ export class Task implements ITask {
 		task.domain = taskData.domain;
 		task.query = taskData.query;
 
-		if(!taskData.cmd) {
+		if (!taskData.cmd) {
 			const cmdData = Task.genCmd(task.domain, task.query);
 			task.fileName = cmdData.fileName;
 			task.filePath = cmdData.filePath;
@@ -129,7 +129,7 @@ export class Task implements ITask {
 	private static fileNameField() {
 		return 'fileName';
 	}
-	
+
 	private static statusField() {
 		return 'status';
 	}
@@ -142,7 +142,7 @@ export class Task implements ITask {
 			Task.cmdField(),
 			Task.filePathField(),
 			Task.fileNameField(),
-			Task.statusField(),
+			Task.statusField()
 		];
 	}
 
@@ -161,7 +161,6 @@ export class Task implements ITask {
 		if (!ret.domain) {
 			return null;
 		}
-		console.log(ret);
 		if (Object.keys(ret).length === fields.length) {
 			return ret;
 		}
@@ -255,8 +254,6 @@ export class Task implements ITask {
 			const dataFromDb = await this.client.hmgetAsync<string[]>(q);
 
 			const data = Task.parseDataFromBd(dataFromDb);
-			console.log('dataFromDb');
-			console.log(data);	
 			if (data) {
 				return Task.create(data);
 			}
@@ -270,7 +267,6 @@ export class Task implements ITask {
 
 	public async getAll() {
 		const keys = await this.client.sscanAsync(Task.setKey(), '0');
-		console.log(keys);
 		const tasks: Task[] = [];
 		await asyncForEach(keys[1], async (k: string) => {
 			const task = await this.findByHash(k);
