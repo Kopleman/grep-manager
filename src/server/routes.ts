@@ -16,13 +16,15 @@ router.get('/', async ctx => {
 router.get('/task', async ctx => {
 	const modelTask = new Task(redisClient);
 	const tasks = await modelTask.getAll();
+	const _tasks: {[index:string]: Task} = {};
 	tasks.forEach(t => {
 		delete t['client'];
 		delete t['isCreate'];
+		_tasks[t.hash] = t;
 	});
-	console.log(tasks);
+	console.log(_tasks);
 	ctx.response.status = 200;
-	ctx.response.body = tasks;
+	ctx.response.body = _tasks;
 });
 
 router.post('/task', async ctx => {
