@@ -11,6 +11,7 @@ declare module 'redis' {
 		keysAsync(pattern: string): Promise<string[]>;
 		scanAsync(cursor: number, options: string[]): Promise<[string, string[]]>;
 		sscanAsync(key: string, cursor: string, options?: string[]): Promise<[string, string[]]>;
+		flushallAsync(): Promise<string>;
 	}
 
 	export interface Multi extends Redis.Commands<Multi> {

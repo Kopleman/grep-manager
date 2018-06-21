@@ -9,20 +9,23 @@ router.get('/', async ctx => {
 		from: '01/06/2018',
 		to: '05/06/2018'
 	});
-	console.log(cmd);
+	// const status = await redisClient.flushallAsync();
+	// console.log(status);
 	ctx.body = 'Hello World!';
 });
 
 router.get('/task', async ctx => {
 	const modelTask = new Task(redisClient);
 	const tasks = await modelTask.getAll();
+	console.log(tasks);
 	const _tasks: {[index:string]: Task} = {};
-	tasks.forEach(t => {
-		delete t['client'];
-		delete t['isCreate'];
-		_tasks[t.hash] = t;
-	});
-	console.log(_tasks);
+	if( tasks && tasks.length) {
+		tasks.forEach(t => {
+			delete t['client'];
+			delete t['isCreate'];
+			_tasks[t.hash] = t;
+		});
+	}
 	ctx.response.status = 200;
 	ctx.response.body = _tasks;
 });
