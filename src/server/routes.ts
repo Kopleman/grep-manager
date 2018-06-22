@@ -42,23 +42,19 @@ router.post('/task', async ctx => {
 	if (!domain) {
 		ctx.throw(400, 'domain is required');
 	}
-	const currentTaskCount = Object.keys(TASK_STACK).length;
-
-	if (currentTaskCount >= 10) {
-		ctx.response.body = { message: 'Tasks quota exceeded' };
-	}
+	
 
 	try {
 		const task = await modelTask.findByDomainAndQuery(domain, query);
 		if (task) {
 			if (task.status === 'completed') {
-				ctx.response.status = 409;
-				ctx.response.body = { message: 'Task already completed' };
+				ctx.throw(409, 'The task already completed');
+				return;
 			}
 
 			if (task.status === 'inProgress') {
-				ctx.response.status = 409;
-				ctx.response.body = { message: 'Task is in progress' };
+				ctx.throw(409, 'The task is in progress');
+				return;
 			}
 
 			if (task.status === 'failed') {
@@ -69,6 +65,13 @@ router.post('/task', async ctx => {
 				task.exec();
 			}
 		} else {
+			const currentTaskCount = Object.keys(TASK_STACK).length;
+
+			if (currentTaskCount >= 10) {
+				ctx.throw(409, 'Tasks quota exceeded');
+				return;
+			}
+			
 			const newTask = Task.create({
 				query: body,
 				domain
