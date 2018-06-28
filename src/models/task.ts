@@ -36,6 +36,11 @@ export class Task implements ITask {
 		}
 		const from = moment(query.from, 'DD/MM/YYYY');
 		const to = moment(query.to, 'DD/MM/YYYY');
+
+		if(from.diff(to, 'days') < 0 ) {
+			throw new Error('"From" is  higher than "To"!');
+		}
+		
 		const fileName = `${domain}-${from.format('YYYYMMDD')}-${to.format('YYYYMMDD')}.txt.gz`;
 		const filePath = `${config.folderForSave}/${fileName}`;
 		let whereStr = '';

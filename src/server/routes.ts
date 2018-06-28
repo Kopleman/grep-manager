@@ -100,6 +100,9 @@ router.delete('/task/:id', async ctx => {
 	try {
 		const task = await modelTask.findByHash(id);
 		if (task) {
+			if( TASK_STACK[task.hash] ) {
+				await TASK_STACK[task.hash].kill();
+			}
 			await task.remove();
 			ctx.response.status = 200;
 			ctx.response.body = { message: 'ok' };
