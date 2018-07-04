@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - "/logbackup:/logbackup"
-      - "./storage:/storage"
+      - "./storage:/app/storage"
     restart: always
     environment:
       - NODE_ENV=production

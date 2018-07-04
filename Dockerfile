@@ -1,9 +1,9 @@
 FROM node:8
 
 WORKDIR /app
-COPY package.json /app
+COPY *.json /app/
 RUN npm install
-COPY . /app
+COPY ./src /app/src
 RUN npm run build-server
 
 EXPOSE 8088

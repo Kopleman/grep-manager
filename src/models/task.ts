@@ -36,8 +36,7 @@ export class Task implements ITask {
 		}
 		const from = moment(query.from, 'DD/MM/YYYY');
 		const to = moment(query.to, 'DD/MM/YYYY');
-
-		if(from.diff(to, 'days') < 0 ) {
+		if(to.diff(from, 'days') < 0 ) {
 			throw new Error('"From" is  higher than "To"!');
 		}
 		
@@ -65,7 +64,6 @@ export class Task implements ITask {
 		task.time = taskData.time ? taskData.time : new Date().getTime();
 		task.domain = taskData.domain;
 		task.query = taskData.query;
-
 		if (!taskData.cmd) {
 			const cmdData = Task.genCmd(task.domain, task.query);
 			task.fileName = cmdData.fileName;

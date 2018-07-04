@@ -16,7 +16,7 @@ const config: IConfig = {
 		port: 6379
 	},
 	logsRoot: '/logbackup',
-	folderForSave: '/storage',
+	folderForSave: 'storage',
 	lookUpServers: ['ul1.ukit.com', 'ul2.ukit.com']
 };
 
