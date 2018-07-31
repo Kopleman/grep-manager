@@ -7,6 +7,7 @@ export interface IConfig {
 	logsRoot: string;
 	folderForSave: string;
 	lookUpServers: string[];
+	taskQuota: number;
 }
 
 const config: IConfig = {
@@ -17,7 +18,8 @@ const config: IConfig = {
 	},
 	logsRoot: '/logbackup',
 	folderForSave: 'storage',
-	lookUpServers: ['ul1.ukit.com', 'ul2.ukit.com']
+	lookUpServers: ['ul1.ukit.com', 'ul2.ukit.com'],
+	taskQuota: 10
 };
 
 export { config };

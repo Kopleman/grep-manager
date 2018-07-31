@@ -269,9 +269,17 @@ export class Task implements ITask {
 	}
 
 	public async getAll() {
-		const keys = await this.client.sscanAsync(Task.setKey(), '0');
+		let currCursor = '0';
+		let keys: string[] = [];
+		let scanned = false;
+		while(scanned === false) {
+			const data = await this.client.sscanAsync(Task.setKey(), currCursor);
+			keys = keys.concat(data[1]);
+			currCursor = data[0];
+			scanned = currCursor === '0';
+		}
 		const tasks: Task[] = [];
-		await asyncForEach(keys[1], async (k: string) => {
+		await asyncForEach(keys, async (k: string) => {
 			const task = await this.findByHash(k);
 			tasks.push(task);
 		});

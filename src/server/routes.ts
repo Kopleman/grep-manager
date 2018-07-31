@@ -2,6 +2,7 @@ import * as Router from 'koa-router';
 import * as send from 'koa-send';
 import { redisClient } from './db';
 import { Task, TASK_STACK } from '../models/task';
+import { config } from './config';
 
 const router = new Router();
 
@@ -41,7 +42,9 @@ router.post('/task', async ctx => {
 	};
 
 	if (!domain) {
-		ctx.throw(400, 'domain is required');
+		ctx.response.status = 400;
+		ctx.response.body = { message: 'domain is required'};
+		return;
 	}
 	
 
@@ -49,12 +52,14 @@ router.post('/task', async ctx => {
 		const task = await modelTask.findByDomainAndQuery(domain, query);
 		if (task) {
 			if (task.status === 'completed') {
-				ctx.throw(409, 'The task already completed');
+				ctx.response.status = 409;
+				ctx.response.body = { message: 'The task already completed'};
 				return;
 			}
 
 			if (task.status === 'inProgress') {
-				ctx.throw(409, 'The task is in progress');
+				ctx.response.status = 409;
+				ctx.response.body = { message: 'The task is in progress'};
 				return;
 			}
 
@@ -68,8 +73,9 @@ router.post('/task', async ctx => {
 		} else {
 			const currentTaskCount = Object.keys(TASK_STACK).length;
 
-			if (currentTaskCount >= 10) {
-				ctx.throw(409, 'Tasks quota exceeded');
+			if (currentTaskCount >= config.taskQuota) {
+				ctx.response.status = 409;
+				ctx.response.body = { message: 'Tasks quota exceeded'};
 				return;
 			}
 			
@@ -84,7 +90,8 @@ router.post('/task', async ctx => {
 		}
 	} catch (err) {
 		console.log(err);
-		ctx.throw(500, err.toString());
+		ctx.response.status = 500;
+		ctx.response.body = { message: err.toString()};
 	}
 });
 
@@ -94,8 +101,7 @@ router.delete('/task/:id', async ctx => {
 	if (!id) {
 		ctx.response.body = { message: 'Id is not defined' };
 		ctx.response.status = 404;
-
-		ctx.throw(404, 'Id is not defined');
+		return;
 	}
 
 	try {
@@ -109,11 +115,13 @@ router.delete('/task/:id', async ctx => {
 			ctx.response.status = 200;
 			ctx.response.body = { message: 'ok' };
 		} else {
-			ctx.throw(404, 'Task not found');
+			ctx.response.body = { message: 'Task not found' };
+			ctx.response.status = 404;
 		}
 	} catch (err) {
 		console.log(err);
-		ctx.throw(500, err);
+		ctx.response.status = 500;
+		ctx.response.body = { message: err.toString()};
 	}
 });
 
@@ -123,8 +131,7 @@ router.get('/task/:id/download', async ctx => {
 	if (!id) {
 		ctx.response.body = { message: 'Id is not defined' };
 		ctx.response.status = 404;
-
-		ctx.throw(404, 'Id is not defined');
+		return;
 	}
 	try {
 		const task = await modelTask.findByHash(id);
@@ -133,11 +140,13 @@ router.get('/task/:id/download', async ctx => {
 			ctx.set('Content-disposition', `attachment; filename= ${task.fileName}`);
 			await send(ctx, task.filePath);
 		} else {
-			ctx.throw(404, 'Task not found');
+			ctx.response.body = { message: 'Task not found' };
+			ctx.response.status = 404;
 		}
 	} catch (err) {
 		console.log(err);
-		ctx.throw(500, err);
+		ctx.response.status = 500;
+		ctx.response.body = { message: err.toString()};
 	}
 });
 
