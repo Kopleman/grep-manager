@@ -198,13 +198,17 @@ export class Task implements ITask {
 		try {
 			await promise;
 			this.status = 'completed';
-			TASK_STACK[this.hash] = null;
-			await this.save();
 		} catch (err) {
 			console.log(err);
 			this.status = 'failed';
+		}
+		
+		try {
 			TASK_STACK[this.hash] = null;
+			delete TASK_STACK[this.hash];
 			await this.save();
+		} catch (err) {
+			console.log(err);
 		}
 	}
 

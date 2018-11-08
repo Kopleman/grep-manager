@@ -110,6 +110,7 @@ router.delete('/task/:id', async ctx => {
 			if( TASK_STACK[task.hash] ) {
 				await TASK_STACK[task.hash].kill();
 				TASK_STACK[task.hash] = null;
+				delete TASK_STACK[this.hash];
 			}
 			await task.remove();
 			ctx.response.status = 200;
